@@ -736,27 +736,7 @@ function onGameWin() {
 // Инициализация VK Bridge
 vkBridge.send("VKWebAppInit", {});
 
-// Показ баннера рекламы
-function showBannerAd() {
-    vkBridge.send("VKWebAppShowBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама показана:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при показе баннерной рекламы:', error);
-        });
-}
 
-// Скрытие баннера рекламы
-function hideBannerAd() {
-    vkBridge.send("VKWebAppHideBannerAd")
-        .then(response => {
-            console.log('Баннерная реклама скрыта:', response);
-        })
-        .catch(error => {
-            console.error('Ошибка при скрытии баннерной рекламы:', error);
-        });
-}
 
 // Подписка на события
 vkBridge.subscribe((e) => {
@@ -1044,7 +1024,6 @@ function showMenu() {
     document.getElementById('game').style.display = 'none';
     clearInterval(timerInterval);
     // Скрыть баннер
-    hideBannerAd();
 }
 
 function resizeSudokuBoard() {
@@ -1112,8 +1091,6 @@ function startGame(level) {
         showAdInterstitial(); // Показываем рекламу
     }
 
-    // Показ баннера рекламы, когда игра начинается
-    showBannerAd();
 }
 
 function endGame() 
@@ -1368,11 +1345,12 @@ function clearNumber() {
     if (selectedCell) { // Проверяем, выбрана ли ячейка
         const cellRow = selectedCell.parentElement.rowIndex;
         const cellCol = selectedCell.cellIndex;
-        
+
         // Проверяем, содержит ли ячейка изначально заданное число
         if (initialNumbers[cellRow][cellCol] === null) { // Значение null означает пустоту
             selectedCell.textContent = ''; // Очищаем содержимое выбранной ячейки
             selectedCell.classList.remove('player-number'); // Убираем стиль для пользовательского числа
+            clearHighlight(); // Убираем выделение для всех ячеек
         } 
     }
 }
@@ -1429,8 +1407,6 @@ function restartGame() {
     // Всегда показываем межэкранную рекламу при перезапуске
     showAdInterstitial();
 
-    // Показ баннера рекламы, когда игра начинается
-    showBannerAd();
 }
 
 setTheme();
