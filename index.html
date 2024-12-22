@@ -700,28 +700,38 @@ let statistics = {
 };
 
 function updateStatistics(level, elapsedTime) {
-    statistics = JSON.parse(localStorage.getItem('sudokuStatistics')) || statistics;
+    // Загружаем текущую статистику из VK
+    vkBridge.send('VKWebAppStorageGet', { key: 'sudokuStatistics' })
+        .then(data => {
+            if (data && data.value) {
+                statistics = JSON.parse(data.value) || statistics;
+            }
 
-    statistics[level].wins += 1;
+            // Обновляем статистику
+            statistics[level].wins += 1;
 
-    if (statistics[level].bestTime === "00:00" || compareTimes(elapsedTime, statistics[level].bestTime) < 0) {
-        statistics[level].bestTime = elapsedTime;
-    }
+            // Обновляем лучшее время
+            if (statistics[level].bestTime === "00:00" || compareTimes(elapsedTime, statistics[level].bestTime) < 0) {
+                statistics[level].bestTime = elapsedTime;
+            }
 
-    statistics.total.wins += 1;
+            // Обновляем общее количество побед
+            statistics.total.wins += 1;
 
-    vkBridge.send('VKWebAppStorageSet', {
-        key: 'sudokuStatistics',
-        value: JSON.stringify(statistics)
-    })
-    .then(data => {
-        if (data.result) {
-            console.log('Статистика сохранена успешно');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при сохранении статистики:', error);
-    });
+            // Сохраняем обновленную статистику
+            return vkBridge.send('VKWebAppStorageSet', {
+                key: 'sudokuStatistics',
+                value: JSON.stringify(statistics)
+            });
+        })
+        .then(data => {
+            if (data.result) {
+                console.log('Статистика обновлена успешно');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при обновлении статистики:', error);
+        });
 }
 
 function loadStatistics() {
@@ -734,6 +744,12 @@ function loadStatistics() {
         .catch(error => {
             console.error('Ошибка при загрузке статистики:', error);
         });
+}
+
+        function initialize() {
+    loadStatistics(); // Загрузка статистики перед использованием
+    setTheme(); // Установка темы
+    showMenu(); // Показ меню
 }
 
 function compareTimes(time1, time2) {
@@ -1461,6 +1477,9 @@ function restartGame() {
 
 }
 
+// Вызов в основном теле скрипта
+initialize(); // Здесь, после всех объявленных функций
+        
 setTheme();
 
         // Изначальная загрузка меню
