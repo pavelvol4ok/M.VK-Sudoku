@@ -700,56 +700,23 @@ let statistics = {
 };
 
 function updateStatistics(level, elapsedTime) {
-    // Загружаем текущую статистику из VK
-    vkBridge.send('VKWebAppStorageGet', { key: 'sudokuStatistics' })
-        .then(data => {
-            if (data && data.value) {
-                statistics = JSON.parse(data.value) || statistics;
-            }
+    // Загружаем текущую статистику из localStorage
+    statistics = JSON.parse(localStorage.getItem('sudokuStatistics')) || statistics;
 
-            // Обновляем статистику
-            statistics[level].wins += 1;
+    // Обновляем статистику
+    statistics[level].wins += 1;
 
-            // Обновляем лучшее время
-            if (statistics[level].bestTime === "00:00" || compareTimes(elapsedTime, statistics[level].bestTime) < 0) {
-                statistics[level].bestTime = elapsedTime;
-            }
+    // Обновляем лучшее время
+    if (statistics[level].bestTime === "00:00" || compareTimes(elapsedTime, statistics[level].bestTime) < 0) {
+        statistics[level].bestTime = elapsedTime;
+    }
 
-            // Обновляем общее количество побед
-            statistics.total.wins += 1;
+    // Обновляем общее количество побед и лучшее время
+    statistics.total.wins += 1;
+    // Логика для общего времени, можете добавить на свой вкус.
 
-            // Сохраняем обновленную статистику
-            return vkBridge.send('VKWebAppStorageSet', {
-                key: 'sudokuStatistics',
-                value: JSON.stringify(statistics)
-            });
-        })
-        .then(data => {
-            if (data.result) {
-                console.log('Статистика обновлена успешно');
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка при обновлении статистики:', error);
-        });
-}
-
-function loadStatistics() {
-    vkBridge.send('VKWebAppStorageGet', { key: 'sudokuStatistics' })
-        .then(data => {
-            if (data && data.value) {
-                statistics = JSON.parse(data.value) || statistics;
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка при загрузке статистики:', error);
-        });
-}
-
-        function initialize() {
-    loadStatistics(); // Загрузка статистики перед использованием
-    setTheme(); // Установка темы
-    showMenu(); // Показ меню
+    // Сохраняем обновленную статистику в localStorage
+    localStorage.setItem('sudokuStatistics', JSON.stringify(statistics));
 }
 
 function compareTimes(time1, time2) {
@@ -842,35 +809,17 @@ function showAdReward() {
 }
 
 function checkFirstLaunch() {
-    vkBridge.send('VKWebAppStorageGet', { key: 'hasLaunched' })
-        .then(data => {
-            return data.value === null; // Проверяем, был ли первый запуск
-        })
-        .catch(error => {
-            console.error('Ошибка при проверке первого запуска:', error);
-            return true; // Если произошла ошибка, считаем, что это первый запуск
-        });
+    return localStorage.getItem('hasLaunched') === null; // Проверяем, был ли первый запуск
 }
 
 function setFirstLaunch() {
-    vkBridge.send('VKWebAppStorageSet', {
-        key: 'hasLaunched',
-        value: 'true'
-    })
-    .then(data => {
-        if (data.result) {
-            console.log('Статус первого запуска установлен');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при установке статуса первого запуска:', error);
-    });
+    localStorage.setItem('hasLaunched', 'true'); // Устанавливаем, что игра была запущена
 }
 
 let timerInterval;
 let startTime;
 const difficultyLevels = {
-    easy: 25,
+    easy: 1,
     medium: 38,
     hard: 44,
     expert: 52, // Добавьте уровень для Эксперта
@@ -887,37 +836,20 @@ let previousCol = null; // Переменная для хранения пред
 
 // Функция для применения темы
 function setTheme() {
-    vkBridge.send('VKWebAppStorageGet', { key: 'darkTheme' })
-        .then(data => {
-            const isDarkTheme = data.value === 'true';
-            document.body.classList.toggle('dark', isDarkTheme);
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.checked = isDarkTheme; // Устанавливаем состояние переключателя
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка при установке темы:', error);
-        });
-}
+        const isDarkTheme = localStorage.getItem('darkTheme') === 'true';
+        document.body.classList.toggle('dark', isDarkTheme);
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.checked = isDarkTheme; // Устанавливаем состояние переключателя
+        }
+    }
 
     // Функция для переключения темы
-function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.toggle('dark');
-    vkBridge.send('VKWebAppStorageSet', {
-        key: 'darkTheme',
-        value: isDark // Сохраняем 'true' или 'false'
-    })
-    .then(data => {
-        if (data.result) {
-            console.log('Тема сохранена успешно');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при сохранении темы:', error);
-    });
-}
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.toggle('dark');
+        localStorage.setItem('darkTheme', isDark); // Сохраняем выбор темы
+    }
     
 function selectCell(cell) 
 {
@@ -1477,9 +1409,6 @@ function restartGame() {
 
 }
 
-// Вызов в основном теле скрипта
-initialize(); // Здесь, после всех объявленных функций
-        
 setTheme();
 
         // Изначальная загрузка меню
